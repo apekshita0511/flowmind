@@ -71,10 +71,7 @@ USE_TZ = True
 STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    "https://flowmind-v7k9-git-main-apekshita-s-projects.vercel.app",
-]
+CORS_ALLOW_ALL_ORIGINS = True
 import os
 ALLOWED_HOSTS = ['*']
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
