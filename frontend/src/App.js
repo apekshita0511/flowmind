@@ -11,12 +11,18 @@ function App() {
   const [input, setInput] = useState("");
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [focusTask, setFocusTask] = useState(null);
 
   useEffect(() => {
-    fetch(`${API}/api/tasks/`)
-      .then(r => r.json())
-      .then(data => setTasks(data));
-  }, []);
+  fetch(`${API}/api/tasks/`)
+    .then(r => r.json())
+    .then(data => setTasks(data));
+
+  fetch(`${API}/api/focus/`)
+    .then(r => r.json())
+    .then(data => setFocusTask(data))
+    .catch(() => {});
+}, []);
 
   const sendMessage = async () => {
     if (!input.trim() || loading) return;
@@ -67,6 +73,47 @@ function App() {
           <p style={{ margin: "4px 0 0", color: "#555", fontSize: "12px" }}>AI Productivity Agent</p>
         </div>
         <div style={{ flex: 1, overflowY: "auto", padding: "16px" }}>
+        {focusTask && (
+  <div
+    style={{
+      background: "#18181b",
+      border: "1px solid #7c3aed",
+      borderRadius: "12px",
+      padding: "12px",
+      marginBottom: "16px"
+    }}
+  >
+    <div
+      style={{
+        color: "#a855f7",
+        fontSize: "11px",
+        fontWeight: "bold",
+        marginBottom: "6px"
+      }}
+    >
+      🎯 TODAY'S FOCUS
+    </div>
+
+    <div
+      style={{
+        fontSize: "13px",
+        lineHeight: "1.5"
+      }}
+    >
+      {focusTask.title}
+    </div>
+
+    <div
+      style={{
+        marginTop: "6px",
+        fontSize: "11px",
+        color: PRIORITY_COLORS[focusTask.priority]
+      }}
+    >
+      {PRIORITY_LABELS[focusTask.priority]}
+    </div>
+  </div>
+)}
           <p style={{ color: "#555", fontSize: "11px", textTransform: "uppercase", letterSpacing: "1px", margin: "0 0 10px" }}>Pending · {pendingTasks.length}</p>
           {pendingTasks.length === 0 && <p style={{ color: "#333", fontSize: "13px" }}>No pending tasks! Tell me a goal to get started.</p>}
           {pendingTasks.map(task => (
