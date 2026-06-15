@@ -90,3 +90,25 @@ RULES:
         except:
             return Response({'message': "Couldn't find that task."})
     return Response({'message': ai_response['message']})
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from .models import Task
+
+@api_view(["GET"])
+def focus_task(request):
+    pending_tasks = Task.objects.filter(status="pending")
+
+    # Highest priority pending task
+    task = pending_tasks.order_by("-priority").first()
+
+    if not task:
+        return Response({
+            "message": "No pending tasks"
+        })
+
+    return Response({
+        "id": task.id,
+        "title": task.title,
+        "priority": task.priority,
+        "status": task.status
+    })
