@@ -53,14 +53,27 @@ function App() {
   };
 
   const completeTask = async (taskId) => {
-    const res = await fetch(`${API}/api/tasks/${taskId}/`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status: "done" })
-    });
-    const updated = await res.json();
-    setTasks(prev => prev.map(t => t.id === updated.id ? updated : t));
-  };
+  const res = await fetch(`${API}/api/tasks/${taskId}/`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ status: "done" })
+  });
+
+  const updated = await res.json();
+
+  setTasks(prev =>
+    prev.map(t => t.id === updated.id ? updated : t)
+  );
+
+  // Refresh focus task automatically
+  try {
+    const focusRes = await fetch(`${API}/api/focus/`);
+    const focusData = await focusRes.json();
+    setFocusTask(focusData);
+  } catch (err) {
+    console.log(err);
+  }
+};
 
   const pendingTasks = tasks.filter(t => t.status !== "done");
   const doneTasks = tasks.filter(t => t.status === "done");
