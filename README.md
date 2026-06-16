@@ -238,6 +238,8 @@ GROQ_API_KEY=your_groq_api_key
 ---
 
 # 📸 Screenshots
+<img width="1912" height="1023" alt="image" src="https://github.com/user-attachments/assets/1c90abd0-a6ea-4031-ac7c-c0df90e9b727" />
+
 
 ### Dashboard
 
@@ -263,7 +265,10 @@ Output:
 ✓ Progress tracked
 ```
 
-(Add screenshots here)
+<img width="1912" height="1023" alt="image" src="https://github.com/user-attachments/assets/efcebdcf-edf4-45b0-92b8-c8622144e51f" />
+<img width="1917" height="1025" alt="image" src="https://github.com/user-attachments/assets/1b238d45-31ee-4192-a426-13fd9783474d" />
+
+
 
 ---
 
