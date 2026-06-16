@@ -4,11 +4,14 @@
 
 ## 🌐 Live Demo
 
-**Frontend:** https://flowmind-v7k9.vercel.app
+### Frontend
+https://flowmind-v7k9.vercel.app
 
-**Backend API:** https://flowmind-production-cc5b.up.railway.app
+### Backend API
+https://flowmind-production-cc5b.up.railway.app/api/tasks/
 
----
+### Admin Panel
+https://flowmind-production-cc5b.up.railway.app/admin/
 
 # 🚀 Overview
 
