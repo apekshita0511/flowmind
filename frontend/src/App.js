@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 
-const API = "https://flowmind-production-cc5b.up.railway.app";
+const API = "http://127.0.0.1:8000";
 const PRIORITY_COLORS = { 1: "#22c55e", 2: "#eab308", 3: "#f97316", 4: "#ef4444", 5: "#dc2626" };
 const PRIORITY_LABELS = { 1: "Low", 2: "Medium", 3: "High", 4: "Urgent", 5: "Critical" };
 
@@ -10,19 +10,28 @@ function App() {
   ]);
   const [input, setInput] = useState("");
   const [tasks, setTasks] = useState([]);
+  const [goals, setGoals] = useState([]);
   const [loading, setLoading] = useState(false);
   const [focusTask, setFocusTask] = useState(null);
 
   useEffect(() => {
+
   fetch(`${API}/api/tasks/`)
     .then(r => r.json())
     .then(data => setTasks(data));
 
+  fetch(`${API}/api/goals/`)
+    .then(r => r.json())
+    .then(data => setGoals(data));
+
   fetch(`${API}/api/focus/`)
     .then(r => r.json())
     .then(data => setFocusTask(data))
-    .catch(() => {});
+    .catch(err => console.log(err));
+
 }, []);
+
+  
 
   const sendMessage = async () => {
     if (!input.trim() || loading) return;
@@ -40,12 +49,43 @@ function App() {
       });
       const data = await res.json();
       setMessages(prev => [...prev, { role: "assistant", text: data.message }]);
-      if (data.task_created) setTasks(prev => [...prev, data.task_created]);
-      if (data.tasks_created) {
-        setTasks(prev => [...prev, ...data.tasks_created]);
-        setMessages(prev => [...prev, { role: "assistant", text: `✅ Created ${data.tasks_created.length} tasks for your goal: "${data.goal}"! Check your task panel.` }]);
-      }
-      if (data.task_updated) setTasks(prev => prev.map(t => t.id === data.task_updated.id ? data.task_updated : t));
+      if (data.task_created) {
+  setTasks(prev => [...prev, data.task_created]);
+}
+
+if (data.tasks_created) {
+
+  const tasksRes = await fetch(`${API}/api/tasks/`);
+  const tasksData = await tasksRes.json();
+  setTasks(tasksData);
+
+  const goalsRes = await fetch(`${API}/api/goals/`);
+  const goalsData = await goalsRes.json();
+  setGoals(goalsData);
+
+  const focusRes = await fetch(`${API}/api/focus/`);
+  const focusData = await focusRes.json();
+  setFocusTask(focusData);
+
+  setMessages(prev => [
+    ...prev,
+    {
+      role: "assistant",
+      text: `✅ Created ${data.tasks_created.length} tasks for your goal: "${data.goal}"! Check your task panel.`
+    }
+  ]);
+}
+
+if (data.task_updated) {
+  setTasks(prev =>
+    prev.map(t =>
+      t.id === data.task_updated.id ? data.task_updated : t
+    )
+  );
+}
+
+
+      
     } catch (e) {
       setMessages(prev => [...prev, { role: "assistant", text: "Something went wrong. Try again!" }]);
     }
@@ -66,15 +106,23 @@ function App() {
   );
 
   // Refresh focus task automatically
-  try {
-    const focusRes = await fetch(`${API}/api/focus/`);
-    const focusData = await focusRes.json();
-    setFocusTask(focusData);
-  } catch (err) {
-    console.log(err);
-  }
-};
+try {
+  const focusRes = await fetch(`${API}/api/focus/`);
+  const focusData = await focusRes.json();
+  setFocusTask(focusData);
 
+  const tasksRes = await fetch(`${API}/api/tasks/`);
+  const tasksData = await tasksRes.json();
+  setTasks(tasksData);
+
+  const goalsRes = await fetch(`${API}/api/goals/`);
+  const goalsData = await goalsRes.json();
+  setGoals(goalsData);
+
+} catch (err) {
+  console.log(err);
+}
+};
   const pendingTasks = tasks.filter(t => t.status !== "done");
   const doneTasks = tasks.filter(t => t.status === "done");
 
@@ -113,7 +161,7 @@ function App() {
         lineHeight: "1.5"
       }}
     >
-      {focusTask.title}
+      {focusTask.title || "No focus task"}
     </div>
 
     <div
@@ -129,15 +177,90 @@ function App() {
 )}
           <p style={{ color: "#555", fontSize: "11px", textTransform: "uppercase", letterSpacing: "1px", margin: "0 0 10px" }}>Pending · {pendingTasks.length}</p>
           {pendingTasks.length === 0 && <p style={{ color: "#333", fontSize: "13px" }}>No pending tasks! Tell me a goal to get started.</p>}
-          {pendingTasks.map(task => (
-            <div key={task.id} style={{ background: "#1a1a1a", borderRadius: "10px", padding: "12px", marginBottom: "8px", borderLeft: `3px solid ${PRIORITY_COLORS[task.priority] || "#555"}` }}>
-              <div style={{ fontSize: "13px", marginBottom: "6px", lineHeight: "1.4" }}>{task.title}</div>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <span style={{ fontSize: "10px", color: "#555" }}>{task.source === 'agent' ? '🤖' : '👤'} · <span style={{ color: PRIORITY_COLORS[task.priority] }}>{PRIORITY_LABELS[task.priority]}</span></span>
-                <button onClick={() => completeTask(task.id)} style={{ background: "#1e3a1e", border: "1px solid #22c55e", borderRadius: "4px", color: "#22c55e", fontSize: "10px", padding: "2px 8px", cursor: "pointer" }}>Done ✓</button>
-              </div>
-            </div>
-          ))}
+          <p
+  style={{
+    color: "#555",
+    fontSize: "11px",
+    textTransform: "uppercase",
+    letterSpacing: "1px",
+    margin: "0 0 10px"
+  }}
+>
+  Goals · {goals.length}
+</p>
+
+{goals.map(goal => (
+  <div
+    key={goal.id}
+    style={{
+      background: "#1a1a1a",
+      borderRadius: "12px",
+      padding: "12px",
+      marginBottom: "12px"
+    }}
+  >
+    <div
+      style={{
+        fontSize: "13px",
+        fontWeight: "bold",
+        color: "#a855f7",
+        marginBottom: "6px"
+      }}
+    >
+      🎯 {goal.title}
+    </div>
+
+    <div
+      style={{
+        fontSize: "11px",
+        color: "#888",
+        marginBottom: "8px"
+      }}
+    >
+      Progress: {goal.progress}%
+    </div>
+
+    {goal.tasks.map(task => (
+  <div
+    key={task.id}
+    style={{
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "center",
+      padding: "6px 0"
+    }}
+  >
+    <span
+      style={{
+        fontSize: "12px",
+        color: task.status === "done" ? "#666" : "#ddd",
+        textDecoration:
+          task.status === "done" ? "line-through" : "none"
+      }}
+    >
+      {task.title}
+    </span>
+
+    {task.status !== "done" && (
+      <button
+        onClick={() => completeTask(task.id)}
+        style={{
+          background: "#1e3a1e",
+          border: "1px solid #22c55e",
+          color: "#22c55e",
+          borderRadius: "4px",
+          padding: "2px 8px",
+          cursor: "pointer",
+          fontSize: "10px"
+        }}
+      >
+        Done ✓
+      </button>
+    )}
+  </div>
+))}
+  </div>
+))}
           {doneTasks.length > 0 && (
             <>
               <p style={{ color: "#555", fontSize: "11px", textTransform: "uppercase", letterSpacing: "1px", margin: "16px 0 10px" }}>Completed · {doneTasks.length}</p>
