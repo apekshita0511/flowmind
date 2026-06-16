@@ -1,46 +1,295 @@
 # ⚡ FlowMind — AI Productivity Agent
 
-> Talk to your task manager in plain English. The AI agent autonomously creates tasks, breaks down goals, and manages your day.
+> An AI-powered productivity system that transforms goals into actionable plans, prioritizes work, tracks progress, and recommends what to focus on next.
 
-## 🎯 What makes it different from ChatGPT?
+## 🌐 Live Demo
 
-ChatGPT gives you text. FlowMind **takes action** — it creates real tasks in a database, breaks big goals into actionable subtasks, and tracks your progress. The AI doesn't just talk, it works.
+**Frontend:** https://flowmind-v7k9.vercel.app
 
-## ✨ Features
+**Backend API:** https://flowmind-production-cc5b.up.railway.app
 
-- 🤖 **Natural language task creation** — "Add a task to review my resume" → task created instantly
-- 🎯 **Goal breakdown** — "I want to crack Amazon in 3 months" → AI generates 12 specific tasks automatically
-- ✅ **Task completion** — "Mark leetcode as done" → status updated in real-time
-- 📊 **Progress tracking** — live stats: pending, completed, completion %
-- 🎨 **Priority visualization** — color-coded tasks (Low → Critical)
-- 💬 **Conversation memory** — AI remembers context across messages
+---
 
-## 🛠️ Tech Stack
+# 🚀 Overview
 
-| Layer | Technology |
-|-------|-----------|
-| Frontend | React.js |
-| Backend | Django + Django REST Framework |
-| Database | SQLite |
-| AI | Groq API (Llama 3.3 70B) |
+FlowMind is an AI productivity assistant built with React, Django REST Framework, PostgreSQL, and Groq LLMs.
 
-## 🚀 Run Locally
+Instead of only generating text, FlowMind converts user goals into structured task plans, stores them in a database, tracks completion progress, and continuously recommends the highest-priority task to focus on.
 
-**Backend:**
+### Example
+
+```text
+User:
+"I want to crack Amazon in 3 months"
+
+FlowMind:
+✓ Creates a goal
+✓ Breaks it into interview-prep tasks
+✓ Assigns priorities
+✓ Tracks completion progress
+✓ Suggests today's focus task
+```
+
+---
+
+# ✨ Features
+
+## 🤖 AI Goal Decomposition
+
+Convert ambitious goals into actionable plans.
+
+Example:
+
+```text
+Crack Amazon in 3 months
+```
+
+↓
+
+```text
+• DSA Practice
+• System Design
+• OOP Concepts
+• DBMS
+• Operating Systems
+• Mock Interviews
+• Resume Preparation
+• Behavioral Questions
+```
+
+---
+
+## 🎯 Smart Focus Mode
+
+FlowMind automatically selects the most important pending task and displays it as:
+
+```text
+Today's Focus
+```
+
+Helping users avoid decision fatigue and focus on the next best action.
+
+---
+
+## 📊 Progress Tracking
+
+Track progress for every goal.
+
+Features include:
+
+* Total tasks
+* Completed tasks
+* Remaining tasks
+* Percentage completion
+
+Example:
+
+```text
+Goal Progress: 38%
+```
+
+---
+
+## ✅ Task Management
+
+* Create tasks using natural language
+* Mark tasks complete
+* Real-time status updates
+* Priority-based organization
+* Goal-linked task tracking
+
+---
+
+## 🧠 AI Productivity Agent
+
+The AI agent can:
+
+* Create tasks
+* Break down goals
+* Complete tasks
+* Recommend focus areas
+* Answer productivity-related questions
+
+using structured JSON actions between the frontend and backend.
+
+---
+
+## 🎨 Modern Dashboard
+
+Includes:
+
+* Dark productivity-focused UI
+* Goal overview panel
+* Focus task card
+* Real-time task statistics
+* AI chat interface
+* Progress visualization
+
+---
+
+# 🏗️ System Architecture
+
+```text
+React Frontend
+       │
+       ▼
+Django REST API
+       │
+       ▼
+PostgreSQL Database
+       │
+       ▼
+Groq API (Llama 3.3 70B)
+```
+
+---
+
+# 🛠️ Tech Stack
+
+| Layer            | Technology              |
+| ---------------- | ----------------------- |
+| Frontend         | React.js                |
+| Backend          | Django                  |
+| API              | Django REST Framework   |
+| Database         | PostgreSQL (Railway)    |
+| AI               | Groq API                |
+| Model            | Llama 3.3 70B Versatile |
+| Frontend Hosting | Vercel                  |
+| Backend Hosting  | Railway                 |
+| Version Control  | Git & GitHub            |
+
+---
+
+# 📂 Project Structure
+
+```text
+flowmind/
+│
+├── frontend/
+│   ├── src/
+│   ├── public/
+│   └── package.json
+│
+├── flowmind_backend/
+│   ├── tasks/
+│   ├── flowmind_backend/
+│   ├── manage.py
+│   └── requirements.txt
+│
+└── README.md
+```
+
+---
+
+# 🚀 Run Locally
+
+## Backend
+
 ```bash
 cd flowmind_backend
+
 pip install -r requirements.txt
+
 python manage.py migrate
+
 python manage.py runserver
 ```
 
-**Frontend:**
+Backend runs at:
+
+```text
+http://127.0.0.1:8000
+```
+
+---
+
+## Frontend
+
 ```bash
 cd frontend
+
 npm install
+
 npm start
 ```
 
-**Environment variables** — create `flowmind_backend/.env`:GROQ_API_KEY=your_groq_api_key
-## 👩‍💻 Author
-Apekshita Chauhan — [GitHub](https://github.com/apekshita0511)
+Frontend runs at:
+
+```text
+http://localhost:3000
+```
+
+---
+
+# 🔑 Environment Variables
+
+Create:
+
+```text
+flowmind_backend/.env
+```
+
+Add:
+
+```env
+GROQ_API_KEY=your_groq_api_key
+```
+
+---
+
+# 📸 Screenshots
+
+### Dashboard
+
+* AI chat interface
+* Goal management
+* Focus mode
+* Progress tracking
+
+### Goal Breakdown Example
+
+Input:
+
+```text
+Crack Amazon in 3 months
+```
+
+Output:
+
+```text
+✓ Goal created
+✓ Tasks generated
+✓ Priorities assigned
+✓ Progress tracked
+```
+
+(Add screenshots here)
+
+---
+
+# 🎯 Future Improvements
+
+* User Authentication (JWT)
+* Multi-user support
+* AI Weekly Planner
+* Calendar Integration
+* Productivity Analytics Dashboard
+* Email Notifications
+* Deadline Scheduling
+* Long-Term AI Memory
+* Recurring Tasks
+* Mobile Responsive Version
+
+---
+
+# 👩‍💻 Author
+
+**Apekshita Chauhan**
+
+GitHub: https://github.com/apekshita0511
+
+---
+
+## ⭐ If you found this project interesting
+
+Consider starring the repository and sharing feedback.
