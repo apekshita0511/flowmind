@@ -247,8 +247,14 @@ DATABASE_URL=your_postgres_url   # optional, defaults to SQLite locally
 ---
 
 # 📸 Screenshots
+<img width="1915" height="1017" alt="Screenshot 2026-06-20 174224" src="https://github.com/user-attachments/assets/492bff75-b4e1-44ff-aa4c-b2d415389cc2" />
+<img width="1918" height="1018" alt="Screenshot 2026-06-20 174242" src="https://github.com/user-attachments/assets/bed934d6-beb3-4a0a-97bf-616b043ef70c" />
+<img width="1917" height="1002" alt="Screenshot 2026-06-20 174315" src="https://github.com/user-attachments/assets/18a3f525-8526-4dd8-a4a1-eade957b5827" />
+<img width="1918" height="1003" alt="Screenshot 2026-06-20 174330" src="https://github.com/user-attachments/assets/7f5dbd7c-fc01-4c1d-bbcb-1ebfe1bb6658" />
 
-<img width="1912" height="1023" alt="image" src="https://github.com/user-attachments/assets/1c90abd0-a6ea-4031-ac7c-c0df90e9b727" />
+
+
+
 
 ### Dashboard
 - AI chat interface
@@ -262,9 +268,6 @@ DATABASE_URL=your_postgres_url   # optional, defaults to SQLite locally
 Input:  "Crack Amazon in 3 months"
 Output: ✓ Goal created  ✓ 10 tasks generated  ✓ Priorities assigned  ✓ Progress tracked
 ```
-
-<img width="1912" height="1023" alt="image" src="https://github.com/user-attachments/assets/efcebdcf-edf4-45b0-92b8-c8622144e51f" />
-<img width="1917" height="1025" alt="image" src="https://github.com/user-attachments/assets/1b238d45-31ee-4192-a426-13fd9783474d" />
 
 ---
 
