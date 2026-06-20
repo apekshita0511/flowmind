@@ -74,14 +74,6 @@ def get_groq_response(messages):
 @permission_classes([IsAuthenticated])
 @throttle_classes([AIChatThrottle])
 def ai_chat(request):
-    try:
-        return _ai_chat_inner(request)
-    except Exception as e:
-        import traceback
-        return Response({"message": f"[DEBUG] {type(e).__name__}: {str(e)}", "action": "chat", "traceback": traceback.format_exc()})
-
-
-def _ai_chat_inner(request):
     user = request.user
     user_message = request.data.get("message", "")
     history = request.data.get("history", [])
