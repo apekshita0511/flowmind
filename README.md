@@ -4,162 +4,158 @@
 
 ## 🌐 Live Demo
 
-### Frontend
-https://flowmind-v7k9.vercel.app
+| | |
+|---|---|
+| **Frontend** | https://flowmind-v7k9.vercel.app |
+| **Backend API** | https://flowmind-production-cc5b.up.railway.app/api/v1/ |
+| **API Docs (Swagger)** | https://flowmind-production-cc5b.up.railway.app/api/v1/docs/ |
+| **Admin Panel** | https://flowmind-production-cc5b.up.railway.app/admin/ |
 
-### Backend API
-https://flowmind-production-cc5b.up.railway.app/api/tasks/
-
-### Admin Panel
-https://flowmind-production-cc5b.up.railway.app/admin/
+---
 
 # 🚀 Overview
 
-FlowMind is an AI productivity assistant built with React, Django REST Framework, PostgreSQL, and Groq LLMs.
-
-Instead of only generating text, FlowMind converts user goals into structured task plans, stores them in a database, tracks completion progress, and continuously recommends the highest-priority task to focus on.
+FlowMind is a full-stack AI productivity assistant built with React, Django REST Framework, PostgreSQL, and Groq LLMs. It uses JWT authentication for per-user data isolation, a custom scoring algorithm to surface the most important task, and an analytics engine to track streaks and productivity over time.
 
 ### Example
 
 ```text
-User:
-"I want to crack Amazon in 3 months"
+User: "I want to crack Amazon in 3 months"
 
 FlowMind:
-✓ Creates a goal
-✓ Breaks it into interview-prep tasks
-✓ Assigns priorities
-✓ Tracks completion progress
-✓ Suggests today's focus task
+✓ Creates a goal tied to your account
+✓ Breaks it into 10 interview-prep tasks
+✓ Assigns priority levels (DSA=Critical, Mock Interviews=High...)
+✓ Scores each task using urgency + priority + staleness
+✓ Suggests today's highest-score focus task
+✓ Tracks your streak and productivity score over time
 ```
 
 ---
 
 # ✨ Features
 
+## 🔐 JWT Authentication
+
+Per-user accounts with secure JWT-based auth.
+
+- Register / Login flow
+- 24h access tokens, 7-day refresh tokens
+- Every goal and task is scoped to the authenticated user
+
+---
+
 ## 🤖 AI Goal Decomposition
 
-Convert ambitious goals into actionable plans.
-
-Example:
+Convert ambitious goals into structured action plans via Groq's Llama 3.3 70B model.
 
 ```text
-Crack Amazon in 3 months
+Input:  "Crack Amazon in 3 months"
+
+Output:
+• DSA Practice           [Critical]
+• LeetCode Daily         [Urgent]
+• System Design          [High]
+• OOP Concepts           [High]
+• DBMS                   [Medium]
+• Operating Systems      [Medium]
+• Computer Networks      [Medium]
+• Mock Interviews        [Urgent]
+• Resume Preparation     [High]
+• Behavioral Questions   [Medium]
 ```
 
-↓
-
-```text
-• DSA Practice
-• System Design
-• OOP Concepts
-• DBMS
-• Operating Systems
-• Mock Interviews
-• Resume Preparation
-• Behavioral Questions
-```
+Supports SWE/SDE interview prep, tech learning roadmaps, and business goals.
 
 ---
 
-## 🎯 Smart Focus Mode
+## 🎯 Smart Focus Algorithm
 
-FlowMind automatically selects the most important pending task and displays it as:
+Focus is no longer just "highest priority number." A custom scoring formula ranks every pending task:
 
-```text
-Today's Focus
+```
+score = base_priority × urgency_multiplier × staleness_boost
 ```
 
-Helping users avoid decision fatigue and focus on the next best action.
+- **urgency_multiplier** — exponential decay based on days until deadline (overdue = 4×, due today = 3×, due in 3 days = 2×)
+- **staleness_boost** — tasks that have waited 30+ days get up to a 30% bump so nothing stays buried forever
+- The top-scoring task is surfaced as **Today's Focus**
 
 ---
 
-## 📊 Progress Tracking
+## 📊 Productivity Analytics
 
-Track progress for every goal.
+A dedicated Analytics tab shows:
 
-Features include:
+| Metric | Description |
+|---|---|
+| Productivity Score | Weighted blend of completion rate + streak (0–100) |
+| Day Streak | Consecutive days with at least one task completed |
+| Completion Rate | % of all tasks marked done |
+| Daily Chart | Bar chart of tasks completed over the last 7 days |
+| Priority Breakdown | Completion rate per priority level (Low → Critical) |
 
-* Total tasks
-* Completed tasks
-* Remaining tasks
-* Percentage completion
+---
 
-Example:
+## ⚙️ Production-Ready Engineering
 
-```text
-Goal Progress: 38%
-```
+| Feature | Detail |
+|---|---|
+| Rate limiting | AI chat throttled to 30 req/hour per user via DRF throttle |
+| Auto-migration | `python manage.py migrate` runs on every Railway deploy |
+| Static files | WhiteNoise serves static assets in production |
+| API versioning | All endpoints under `/api/v1/` |
+| Swagger docs | Auto-generated OpenAPI spec at `/api/v1/docs/` |
+| CI pipeline | GitHub Actions runs 12 unit tests against PostgreSQL on every push |
 
 ---
 
 ## ✅ Task Management
 
-* Create tasks using natural language
-* Mark tasks complete
-* Real-time status updates
-* Priority-based organization
-* Goal-linked task tracking
-
----
-
-## 🧠 AI Productivity Agent
-
-The AI agent can:
-
-* Create tasks
-* Break down goals
-* Complete tasks
-* Recommend focus areas
-* Answer productivity-related questions
-
-using structured JSON actions between the frontend and backend.
-
----
-
-## 🎨 Modern Dashboard
-
-Includes:
-
-* Dark productivity-focused UI
-* Goal overview panel
-* Focus task card
-* Real-time task statistics
-* AI chat interface
-* Progress visualization
+- Create tasks via natural language chat
+- Mark tasks complete (auto-records `completed_at` timestamp)
+- Goal-linked task tracking with progress bars
+- Priority color coding (green → red)
+- Real-time sidebar updates after every action
 
 ---
 
 # 🏗️ System Architecture
 
 ```text
-React Frontend
-       │
-       ▼
-Django REST API
-       │
-       ▼
-PostgreSQL Database
-       │
-       ▼
-Groq API (Llama 3.3 70B)
+React Frontend (Vercel)
+        │  JWT in Authorization header
+        ▼
+Django REST API  ──── /api/v1/auth/      (register, login, refresh)
+(Railway)        ──── /api/v1/goals/     (per-user goals + progress)
+        │        ──── /api/v1/tasks/     (CRUD, PATCH to complete)
+        │        ──── /api/v1/chat/      (AI agent, throttled)
+        │        ──── /api/v1/focus/     (smart scoring algorithm)
+        │        ──── /api/v1/analytics/ (streak, chart, productivity)
+        │        ──── /api/v1/docs/      (Swagger UI)
+        ▼
+PostgreSQL (Railway)
+        │
+        ▼
+Groq API — Llama 3.3 70B
 ```
 
 ---
 
 # 🛠️ Tech Stack
 
-| Layer            | Technology              |
-| ---------------- | ----------------------- |
-| Frontend         | React.js                |
-| Backend          | Django                  |
-| API              | Django REST Framework   |
-| Database         | PostgreSQL (Railway)    |
-| AI               | Groq API                |
-| Model            | Llama 3.3 70B Versatile |
-| Frontend Hosting | Vercel                  |
-| Backend Hosting  | Railway                 |
-| Version Control  | Git & GitHub            |
+| Layer | Technology |
+|---|---|
+| Frontend | React.js |
+| Backend | Django 6 + Django REST Framework |
+| Authentication | JWT (djangorestframework-simplejwt) |
+| Database | PostgreSQL (Railway) |
+| AI Model | Groq API — Llama 3.3 70B Versatile |
+| API Docs | drf-spectacular (OpenAPI / Swagger) |
+| Static Files | WhiteNoise |
+| Frontend Hosting | Vercel |
+| Backend Hosting | Railway |
+| CI/CD | GitHub Actions |
 
 ---
 
@@ -168,19 +164,47 @@ Groq API (Llama 3.3 70B)
 ```text
 flowmind/
 │
+├── .github/
+│   └── workflows/
+│       └── ci.yml              # GitHub Actions — runs tests on every push
+│
 ├── frontend/
-│   ├── src/
-│   ├── public/
-│   └── package.json
+│   └── src/
+│       └── App.js              # Auth screen, main dashboard, analytics tab
 │
 ├── flowmind_backend/
 │   ├── tasks/
+│   │   ├── models.py           # Goal (user FK) + Task (deadline, completed_at)
+│   │   ├── views.py            # All endpoints with JWT auth
+│   │   ├── scoring.py          # Smart focus algorithm
+│   │   ├── serializers.py      # Task, Goal, Register serializers
+│   │   ├── urls.py             # /api/v1/ routes
+│   │   └── tests.py            # 12 unit tests
 │   ├── flowmind_backend/
-│   ├── manage.py
+│   │   └── settings.py         # JWT, throttling, Swagger, WhiteNoise config
+│   ├── Procfile                # migrate → collectstatic → gunicorn
 │   └── requirements.txt
 │
 └── README.md
 ```
+
+---
+
+# 🧪 Tests
+
+12 unit tests covering:
+
+- **Scoring algorithm** — priority ordering, overdue deadline boost, near deadline vs far deadline
+- **Auth** — register, password validation, JWT login, unauthenticated rejection
+- **Goals** — list own goals, progress calculation (50% = 1/2 done), user isolation
+- **Analytics** — expected response shape, zero-state safety, streak counting
+
+```bash
+cd flowmind_backend
+python manage.py test tasks --verbosity=2
+```
+
+CI runs these automatically against PostgreSQL on every push to `main`.
 
 ---
 
@@ -190,103 +214,57 @@ flowmind/
 
 ```bash
 cd flowmind_backend
-
 pip install -r requirements.txt
-
 python manage.py migrate
-
 python manage.py runserver
 ```
 
-Backend runs at:
-
-```text
-http://127.0.0.1:8000
-```
-
----
+Runs at `http://127.0.0.1:8000`  
+Swagger docs at `http://127.0.0.1:8000/api/v1/docs/`
 
 ## Frontend
 
 ```bash
 cd frontend
-
 npm install
-
 npm start
 ```
 
-Frontend runs at:
-
-```text
-http://localhost:3000
-```
+Runs at `http://localhost:3000`
 
 ---
 
 # 🔑 Environment Variables
 
-Create:
-
-```text
-flowmind_backend/.env
-```
-
-Add:
+Create `flowmind_backend/.env`:
 
 ```env
 GROQ_API_KEY=your_groq_api_key
+SECRET_KEY=your_django_secret_key
+DATABASE_URL=your_postgres_url   # optional, defaults to SQLite locally
 ```
 
 ---
 
 # 📸 Screenshots
+
 <img width="1912" height="1023" alt="image" src="https://github.com/user-attachments/assets/1c90abd0-a6ea-4031-ac7c-c0df90e9b727" />
 
-
 ### Dashboard
-
-* AI chat interface
-* Goal management
-* Focus mode
-* Progress tracking
+- AI chat interface
+- Goal management with progress bars
+- Smart focus task card with score
+- Analytics tab (streak, productivity score, daily chart)
 
 ### Goal Breakdown Example
 
-Input:
-
 ```text
-Crack Amazon in 3 months
-```
-
-Output:
-
-```text
-✓ Goal created
-✓ Tasks generated
-✓ Priorities assigned
-✓ Progress tracked
+Input:  "Crack Amazon in 3 months"
+Output: ✓ Goal created  ✓ 10 tasks generated  ✓ Priorities assigned  ✓ Progress tracked
 ```
 
 <img width="1912" height="1023" alt="image" src="https://github.com/user-attachments/assets/efcebdcf-edf4-45b0-92b8-c8622144e51f" />
 <img width="1917" height="1025" alt="image" src="https://github.com/user-attachments/assets/1b238d45-31ee-4192-a426-13fd9783474d" />
-
-
-
----
-
-# 🎯 Future Improvements
-
-* User Authentication (JWT)
-* Multi-user support
-* AI Weekly Planner
-* Calendar Integration
-* Productivity Analytics Dashboard
-* Email Notifications
-* Deadline Scheduling
-* Long-Term AI Memory
-* Recurring Tasks
-* Mobile Responsive Version
 
 ---
 
@@ -298,6 +276,4 @@ GitHub: https://github.com/apekshita0511
 
 ---
 
-## ⭐ If you found this project interesting
-
-Consider starring the repository and sharing feedback.
+⭐ If you found this project interesting, consider starring the repository.
