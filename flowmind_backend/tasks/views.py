@@ -62,7 +62,12 @@ def get_groq_response(messages):
         raw = raw.replace("```json", "").replace("```", "").strip()
     start = raw.find("{")
     end = raw.rfind("}") + 1
-    return json.loads(raw[start:end])
+    if start == -1 or end == 0:
+        return {"action": "chat", "message": raw}
+    try:
+        return json.loads(raw[start:end])
+    except json.JSONDecodeError:
+        return {"action": "chat", "message": raw}
 
 
 @api_view(["POST"])
