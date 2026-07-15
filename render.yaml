@@ -1,0 +1,41 @@
+services:
+  - type: web
+    name: flowmind-backend
+    runtime: python
+    plan: free
+    buildCommand: "cd flowmind_backend && pip install -r requirements.txt && python manage.py collectstatic --noinput"
+    startCommand: "cd flowmind_backend && python manage.py migrate --noinput && gunicorn flowmind_backend.wsgi:application --bind 0.0.0.0:$PORT"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11
+      - key: SECRET_KEY
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: DATABASE_URL
+        fromDatabase:
+          name: flowmind-db
+          property: connectionString
+      - key: RENDER_EXTERNAL_URL
+        fromService:
+          name: flowmind-backend
+          property: host
+
+  - type: web
+    name: flowmind-frontend
+    runtime: node
+    plan: free
+    buildCommand: "cd frontend && npm install && npm run build"
+    startCommand: "cd frontend && npm start"
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: REACT_APP_API_URL
+        value: "https://flowmind-backend.onrender.com"
+      - key: REACT_APP_API_BASE_URL
+        value: "https://flowmind-backend.onrender.com/api/v1"
+
+databases:
+  - name: flowmind-db
+    databaseName: flowmind
+    plan: free
