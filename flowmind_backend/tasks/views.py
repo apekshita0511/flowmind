@@ -52,39 +52,45 @@ def register(request):
 
 
 def get_groq_response(messages):
-    client = Groq(api_key=GROQ_KEY)
-    response = client.chat.completions.create(
-        model="llama-3.1-70b-versatile",
-        messages=messages
-    )
-    raw = response.choices[0].message.content.strip()
-    if "```" in raw:
-        raw = raw.replace("```json", "").replace("```", "").strip()
-    start = raw.find("{")
-    end = raw.rfind("}") + 1
-    if start == -1 or end == 0:
-        return {"action": "chat", "message": raw}
+    if not GROQ_KEY:
+        raise ValueError("GROQ_API_KEY environment variable not set")
     try:
-        return json.loads(raw[start:end])
-    except json.JSONDecodeError:
-        return {"action": "chat", "message": raw}
+        client = Groq(api_key=GROQ_KEY)
+        response = client.chat.completions.create(
+            model="llama-3.1-70b-versatile",
+            messages=messages
+        )
+        raw = response.choices[0].message.content.strip()
+        if "```" in raw:
+            raw = raw.replace("```json", "").replace("```", "").strip()
+        start = raw.find("{")
+        end = raw.rfind("}") + 1
+        if start == -1 or end == 0:
+            return {"action": "chat", "message": raw}
+        try:
+            return json.loads(raw[start:end])
+        except json.JSONDecodeError:
+            return {"action": "chat", "message": raw}
+    except Exception as e:
+        raise Exception(f"Groq API error: {str(e)}")
 
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 @throttle_classes([AIChatThrottle])
 def ai_chat(request):
-    user = request.user
-    user_message = request.data.get("message", "")
-    history = request.data.get("history", [])
+    try:
+        user = request.user
+        user_message = request.data.get("message", "")
+        history = request.data.get("history", [])
 
-    tasks = Task.objects.filter(goal__user=user)
-    tasks_list = [
-        {"id": t.id, "title": t.title, "status": t.status, "priority": t.priority}
-        for t in tasks
-    ]
+        tasks = Task.objects.filter(goal__user=user)
+        tasks_list = [
+            {"id": t.id, "title": t.title, "status": t.status, "priority": t.priority}
+            for t in tasks
+        ]
 
-    system_prompt = f"""
+        system_prompt = f"""
 You are FlowMind, a smart AI productivity agent.
 
 Current tasks:
@@ -122,72 +128,81 @@ RULES:
 - Always respond with raw JSON only.
 """
 
-    messages = [{"role": "system", "content": system_prompt}]
-    for msg in history[-6:]:
-        messages.append({
-            "role": "assistant" if msg["role"] == "assistant" else "user",
-            "content": msg["text"]
-        })
-    messages.append({"role": "user", "content": user_message})
-
-    ai_response = get_groq_response(messages)
-    action = ai_response.get("action")
-
-    if action == "create_task":
-        goal, _ = Goal.objects.get_or_create(
-            user=user, title="General", defaults={"status": "active"}
-        )
-        task = Task.objects.create(
-            goal=goal,
-            title=ai_response["title"],
-            priority=ai_response.get("priority", 2),
-            source="agent"
-        )
-        return Response({"message": ai_response["message"], "task_created": TaskSerializer(task).data})
-
-    elif action == "breakdown_goal":
-        goal_title = ai_response.get("goal", "").strip()
-        existing_goal = Goal.objects.filter(
-            title__iexact=goal_title, status="active", user=user
-        ).first()
-
-        if existing_goal:
-            total = existing_goal.tasks.count()
-            done = existing_goal.tasks.filter(status="done").count()
-            return Response({
-                "message": f"You already have this goal. Progress: {done}/{total} tasks completed.",
-                "goal_exists": True,
-                "goal": existing_goal.title
+        messages = [{"role": "system", "content": system_prompt}]
+        for msg in history[-6:]:
+            msg_role = msg.get("role", "user")
+            msg_text = msg.get("text", "")
+            messages.append({
+                "role": "assistant" if msg_role == "assistant" else "user",
+                "content": msg_text
             })
+        messages.append({"role": "user", "content": user_message})
 
-        goal = Goal.objects.create(title=goal_title, user=user)
-        created_tasks = []
-        for t in ai_response.get("tasks", []):
+        ai_response = get_groq_response(messages)
+        if not ai_response:
+            return Response({"message": "Failed to get AI response"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        action = ai_response.get("action")
+    except Exception as e:
+        return Response({"message": f"Error: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        if action == "create_task":
+            goal, _ = Goal.objects.get_or_create(
+                user=user, title="General", defaults={"status": "active"}
+            )
             task = Task.objects.create(
                 goal=goal,
-                title=t["title"],
-                priority=t.get("priority", 2),
+                title=ai_response["title"],
+                priority=ai_response.get("priority", 2),
                 source="agent"
             )
-            created_tasks.append(TaskSerializer(task).data)
+            return Response({"message": ai_response["message"], "task_created": TaskSerializer(task).data})
 
-        return Response({
-            "message": ai_response["message"],
-            "tasks_created": created_tasks,
-            "goal": goal.title
-        })
+        elif action == "breakdown_goal":
+            goal_title = ai_response.get("goal", "").strip()
+            existing_goal = Goal.objects.filter(
+                title__iexact=goal_title, status="active", user=user
+            ).first()
 
-    elif action == "complete_task":
-        try:
-            task = Task.objects.get(id=ai_response["task_id"], goal__user=user)
-            task.status = "done"
-            task.completed_at = timezone.now()
-            task.save()
-            return Response({"message": ai_response["message"], "task_updated": TaskSerializer(task).data})
-        except Task.DoesNotExist:
-            return Response({"message": "Couldn't find that task."})
+            if existing_goal:
+                total = existing_goal.tasks.count()
+                done = existing_goal.tasks.filter(status="done").count()
+                return Response({
+                    "message": f"You already have this goal. Progress: {done}/{total} tasks completed.",
+                    "goal_exists": True,
+                    "goal": existing_goal.title
+                })
 
-    return Response({"message": ai_response.get("message", "")})
+            goal = Goal.objects.create(title=goal_title, user=user)
+            created_tasks = []
+            for t in ai_response.get("tasks", []):
+                task = Task.objects.create(
+                    goal=goal,
+                    title=t["title"],
+                    priority=t.get("priority", 2),
+                    source="agent"
+                )
+                created_tasks.append(TaskSerializer(task).data)
+
+            return Response({
+                "message": ai_response["message"],
+                "tasks_created": created_tasks,
+                "goal": goal.title
+            })
+
+        elif action == "complete_task":
+            try:
+                task = Task.objects.get(id=ai_response["task_id"], goal__user=user)
+                task.status = "done"
+                task.completed_at = timezone.now()
+                task.save()
+                return Response({"message": ai_response["message"], "task_updated": TaskSerializer(task).data})
+            except Task.DoesNotExist:
+                return Response({"message": "Couldn't find that task."})
+
+        return Response({"message": ai_response.get("message", "")})
+    except Exception as e:
+        return Response({"message": f"Error: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(["GET"])
