@@ -150,11 +150,16 @@ RULES:
             })
         messages.append({"role": "user", "content": user_message})
 
+        print(f"[ai_chat] Calling get_groq_response", file=sys.stderr)
         ai_response = get_groq_response(messages)
+        print(f"[ai_chat] Got ai_response: {type(ai_response)}, length: {len(str(ai_response))}", file=sys.stderr)
+        print(f"[ai_chat] ai_response content: {str(ai_response)[:200]}", file=sys.stderr)
+
         if not ai_response:
             return Response({"message": "Failed to get AI response"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         action = ai_response.get("action")
+        print(f"[ai_chat] Action: {action}", file=sys.stderr)
     except Exception as e:
         return Response({"message": f"Error: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
