@@ -54,20 +54,15 @@ def register(request):
 
 
 def get_groq_response(messages):
-    print(f"[get_groq_response] Starting", file=sys.stderr)
     if not GROQ_KEY:
         raise ValueError("GROQ_API_KEY environment variable not set")
     try:
-        print(f"[get_groq_response] Creating Groq client", file=sys.stderr)
         client = Groq(api_key=GROQ_KEY)
-        print(f"[get_groq_response] Calling Groq API with model groq/compound", file=sys.stderr)
         response = client.chat.completions.create(
             model="groq/compound",
             messages=messages
         )
-        print(f"[get_groq_response] Got response from Groq", file=sys.stderr)
         raw = response.choices[0].message.content.strip()
-        print(f"[get_groq_response] Raw response length: {len(raw)}", file=sys.stderr)
         if "```" in raw:
             raw = raw.replace("```json", "").replace("```", "").strip()
         start = raw.find("{")
@@ -77,11 +72,8 @@ def get_groq_response(messages):
         try:
             return json.loads(raw[start:end])
         except json.JSONDecodeError:
-            print(f"[get_groq_response] JSON decode error, returning raw message", file=sys.stderr)
             return {"action": "chat", "message": raw}
     except Exception as e:
-        error_msg = traceback.format_exc()
-        print(f"[get_groq_response] EXCEPTION:\n{error_msg}", file=sys.stderr)
         raise Exception(f"Groq API error: {str(e)}")
 
 
@@ -90,11 +82,9 @@ def get_groq_response(messages):
 @throttle_classes([AIChatThrottle])
 def ai_chat(request):
     try:
-        print(f"[ai_chat] Starting chat request", file=sys.stderr)
         user = request.user
         user_message = request.data.get("message", "")
         history = request.data.get("history", [])
-        print(f"[ai_chat] User: {user}, Message: {user_message[:50]}", file=sys.stderr)
 
         tasks = Task.objects.filter(goal__user=user)
         tasks_list = [
@@ -150,16 +140,11 @@ RULES:
             })
         messages.append({"role": "user", "content": user_message})
 
-        print(f"[ai_chat] Calling get_groq_response", file=sys.stderr)
         ai_response = get_groq_response(messages)
-        print(f"[ai_chat] Got ai_response: {type(ai_response)}, length: {len(str(ai_response))}", file=sys.stderr)
-        print(f"[ai_chat] ai_response content: {str(ai_response)[:200]}", file=sys.stderr)
-
         if not ai_response:
             return Response({"message": "Failed to get AI response"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         action = ai_response.get("action")
-        print(f"[ai_chat] Action: {action}", file=sys.stderr)
 
         if action == "create_task":
             goal, _ = Goal.objects.get_or_create(
@@ -174,52 +159,31 @@ RULES:
             return Response({"message": ai_response["message"], "task_created": TaskSerializer(task).data})
 
         elif action == "breakdown_goal":
-            print(f"[breakdown_goal] Starting", file=sys.stderr)
             goal_title = ai_response.get("goal", "").strip()
-            print(f"[breakdown_goal] Goal title: {goal_title}", file=sys.stderr)
-
             existing_goal = Goal.objects.filter(
                 title__iexact=goal_title, status="active", user=user
             ).first()
-            print(f"[breakdown_goal] Checked for existing goal: {existing_goal}", file=sys.stderr)
 
             if existing_goal:
                 total = existing_goal.tasks.count()
                 done = existing_goal.tasks.filter(status="done").count()
-                print(f"[breakdown_goal] Goal exists, returning existing goal response", file=sys.stderr)
                 return Response({
                     "message": f"You already have this goal. Progress: {done}/{total} tasks completed.",
                     "goal_exists": True,
                     "goal": existing_goal.title
                 })
 
-            print(f"[breakdown_goal] Creating new goal: {goal_title}", file=sys.stderr)
             goal = Goal.objects.create(title=goal_title, user=user)
-            print(f"[breakdown_goal] Goal created with id: {goal.id}", file=sys.stderr)
-
             created_tasks = []
-            tasks_list = ai_response.get("tasks", [])
-            print(f"[breakdown_goal] Processing {len(tasks_list)} tasks", file=sys.stderr)
+            for t in ai_response.get("tasks", []):
+                task = Task.objects.create(
+                    goal=goal,
+                    title=t["title"],
+                    priority=t.get("priority", 2),
+                    source="agent"
+                )
+                created_tasks.append(TaskSerializer(task).data)
 
-            for idx, t in enumerate(tasks_list):
-                try:
-                    print(f"[breakdown_goal] Task {idx}: {t}", file=sys.stderr)
-                    task = Task.objects.create(
-                        goal=goal,
-                        title=t["title"],
-                        priority=t.get("priority", 2),
-                        source="agent"
-                    )
-                    print(f"[breakdown_goal] Task {idx} created with id: {task.id}", file=sys.stderr)
-
-                    serialized = TaskSerializer(task).data
-                    print(f"[breakdown_goal] Task {idx} serialized", file=sys.stderr)
-                    created_tasks.append(serialized)
-                except Exception as task_err:
-                    print(f"[breakdown_goal] ERROR processing task {idx}: {traceback.format_exc()}", file=sys.stderr)
-                    raise
-
-            print(f"[breakdown_goal] All {len(created_tasks)} tasks created, returning response", file=sys.stderr)
             return Response({
                 "message": ai_response["message"],
                 "tasks_created": created_tasks,
