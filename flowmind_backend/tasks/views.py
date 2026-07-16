@@ -117,9 +117,11 @@ Complete task:
 {{"action":"complete_task","task_id":1,"message":"response"}}
 
 Chat:
-{{"action":"chat","message":"response"}}
+{{"action":"chat","message":"natural language response (NOT JSON)"}}
 
 RULES:
+- The "message" field must ALWAYS be natural language text, NEVER JSON, arrays, or code.
+-
 - If the goal is about Amazon, Google, Microsoft, Meta, SWE, SDE, software engineering, coding interviews, placements, jobs or interviews:
   create tasks about DSA, LeetCode, System Design, OOP, DBMS, Operating Systems, Computer Networks, Resume preparation, Mock Interviews, Behavioral Questions.
 - If the goal is about learning a technology: create a learning roadmap from beginner to advanced.
@@ -200,7 +202,18 @@ RULES:
             except Task.DoesNotExist:
                 return Response({"message": "Couldn't find that task."})
 
-        return Response({"message": ai_response.get("message", "")})
+        message = ai_response.get("message", "")
+
+        try:
+            parsed = json.loads(message)
+            if isinstance(parsed, list):
+                message = f"Here are the tasks related to your question. You have {len(parsed)} pending items to consider."
+            elif isinstance(parsed, dict):
+                message = "I found some relevant information for you."
+        except (json.JSONDecodeError, ValueError):
+            pass
+
+        return Response({"message": message})
     except Exception as e:
         error_msg = traceback.format_exc()
         print(f"[ai_chat] EXCEPTION:\n{error_msg}", file=sys.stderr)
