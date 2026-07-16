@@ -10,6 +10,8 @@ from rest_framework.throttling import UserRateThrottle
 from groq import Groq
 import json
 import os
+import traceback
+import sys
 from dotenv import load_dotenv
 
 from .models import Task, Goal
@@ -52,15 +54,20 @@ def register(request):
 
 
 def get_groq_response(messages):
+    print(f"[get_groq_response] Starting", file=sys.stderr)
     if not GROQ_KEY:
         raise ValueError("GROQ_API_KEY environment variable not set")
     try:
+        print(f"[get_groq_response] Creating Groq client", file=sys.stderr)
         client = Groq(api_key=GROQ_KEY)
+        print(f"[get_groq_response] Calling Groq API with model groq/compound", file=sys.stderr)
         response = client.chat.completions.create(
             model="groq/compound",
             messages=messages
         )
+        print(f"[get_groq_response] Got response from Groq", file=sys.stderr)
         raw = response.choices[0].message.content.strip()
+        print(f"[get_groq_response] Raw response length: {len(raw)}", file=sys.stderr)
         if "```" in raw:
             raw = raw.replace("```json", "").replace("```", "").strip()
         start = raw.find("{")
@@ -70,8 +77,11 @@ def get_groq_response(messages):
         try:
             return json.loads(raw[start:end])
         except json.JSONDecodeError:
+            print(f"[get_groq_response] JSON decode error, returning raw message", file=sys.stderr)
             return {"action": "chat", "message": raw}
     except Exception as e:
+        error_msg = traceback.format_exc()
+        print(f"[get_groq_response] EXCEPTION:\n{error_msg}", file=sys.stderr)
         raise Exception(f"Groq API error: {str(e)}")
 
 
@@ -80,9 +90,11 @@ def get_groq_response(messages):
 @throttle_classes([AIChatThrottle])
 def ai_chat(request):
     try:
+        print(f"[ai_chat] Starting chat request", file=sys.stderr)
         user = request.user
         user_message = request.data.get("message", "")
         history = request.data.get("history", [])
+        print(f"[ai_chat] User: {user}, Message: {user_message[:50]}", file=sys.stderr)
 
         tasks = Task.objects.filter(goal__user=user)
         tasks_list = [
@@ -202,7 +214,14 @@ RULES:
 
         return Response({"message": ai_response.get("message", "")})
     except Exception as e:
-        return Response({"message": f"Error: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        error_msg = traceback.format_exc()
+        print(f"[ai_chat] EXCEPTION:\n{error_msg}", file=sys.stderr)
+        print(f"[ai_chat] Exception type: {type(e).__name__}", file=sys.stderr)
+        print(f"[ai_chat] Exception message: {str(e)}", file=sys.stderr)
+        return Response(
+            {"message": f"Error: {str(e)}", "traceback": error_msg},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
 
 
 @api_view(["GET"])
