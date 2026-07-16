@@ -379,8 +379,6 @@ This project is licensed under the **MIT License** — see the [LICENSE](LICENSE
 
 <div align="center">
 
-**Built with ❤️ and AI**
-
 [Report Bug](https://github.com/apekshita0511/flowmind/issues) • [Request Feature](https://github.com/apekshita0511/flowmind/issues)
 
 </div>
