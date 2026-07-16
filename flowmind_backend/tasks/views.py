@@ -86,7 +86,7 @@ def ai_chat(request):
         user_message = request.data.get("message", "")
         history = request.data.get("history", [])
 
-        tasks = Task.objects.filter(goal__user=user)
+        tasks = Task.objects.filter(goal__user=user).order_by('-created_at')[:10]
         tasks_list = [
             {"id": t.id, "title": t.title, "status": t.status, "priority": t.priority}
             for t in tasks
