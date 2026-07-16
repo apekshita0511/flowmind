@@ -59,7 +59,7 @@ def get_groq_response(messages):
     try:
         client = Groq(api_key=GROQ_KEY)
         response = client.chat.completions.create(
-            model="groq/compound",
+            model="llama-3.1-8b-instant",
             messages=messages
         )
         raw = response.choices[0].message.content.strip()
