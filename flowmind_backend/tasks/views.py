@@ -156,7 +156,7 @@ RULES:
                 priority=ai_response.get("priority", 2),
                 source="agent"
             )
-            return Response({"message": ai_response["message"], "task_created": TaskSerializer(task).data})
+            return Response({"message": ai_response.get("message", "Task created!"), "task_created": TaskSerializer(task).data})
 
         elif action == "breakdown_goal":
             goal_title = ai_response.get("goal", "").strip()
@@ -185,7 +185,7 @@ RULES:
                 created_tasks.append(TaskSerializer(task).data)
 
             return Response({
-                "message": ai_response["message"],
+                "message": ai_response.get("message", "Goal breakdown complete!"),
                 "tasks_created": created_tasks,
                 "goal": goal.title
             })
@@ -196,7 +196,7 @@ RULES:
                 task.status = "done"
                 task.completed_at = timezone.now()
                 task.save()
-                return Response({"message": ai_response["message"], "task_updated": TaskSerializer(task).data})
+                return Response({"message": ai_response.get("message", "Task updated!"), "task_updated": TaskSerializer(task).data})
             except Task.DoesNotExist:
                 return Response({"message": "Couldn't find that task."})
 
