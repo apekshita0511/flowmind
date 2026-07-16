@@ -57,7 +57,7 @@ def get_groq_response(messages):
     try:
         client = Groq(api_key=GROQ_KEY)
         response = client.chat.completions.create(
-            model="qwen/qwen3.6-27b",
+            model="groq/compound",
             messages=messages
         )
         raw = response.choices[0].message.content.strip()
