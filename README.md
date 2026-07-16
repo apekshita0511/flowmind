@@ -1,105 +1,386 @@
-# FlowMind 🚀
+# FlowMind
 
-**AI-powered productivity system** — transforms goals into actionable plans.
+[![Django](https://img.shields.io/badge/Django-6.0-darkgreen?style=flat-square&logo=django)](https://www.djangoproject.com/)
+[![React](https://img.shields.io/badge/React-19-blue?style=flat-square&logo=react)](https://react.dev/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-13+-336791?style=flat-square&logo=postgresql)](https://www.postgresql.org/)
+[![Groq API](https://img.shields.io/badge/Groq%20API-LLM-orange?style=flat-square)](https://groq.com/)
+[![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
 
-FlowMind is a full-stack web application that uses AI (Groq) to break down your big goals into manageable tasks, track your progress, and help you stay focused.
+AI-powered productivity system that transforms goals into actionable task plans with real-time progress tracking and intelligent focus recommendations.
+
+## Table of Contents
+
+- [Overview](#overview)
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Architecture](#architecture)
+- [Project Structure](#project-structure)
+- [Installation](#installation)
+- [Environment Variables](#environment-variables)
+- [Running Locally](#running-locally)
+- [API Overview](#api-overview)
+- [Screenshots](#screenshots)
+- [Future Improvements](#future-improvements)
+- [Contributing](#contributing)
+- [License](#license)
+- [Author](#author)
+
+## Overview
+
+FlowMind is a full-stack web application that leverages generative AI to help users break down ambitious goals into manageable, prioritized tasks. By integrating with the Groq API, FlowMind provides intelligent goal decomposition, real-time progress analytics, and AI-driven task prioritization.
+
+The application features a modern React frontend with a dark theme and a production-ready Django REST API backend deployed on Render with PostgreSQL.
 
 ## Features
 
-✨ **AI Goal Breakdown** — Tell FlowMind a big goal like "Crack Amazon in 3 months" and it creates a complete action plan with 8-12 tasks  
-📊 **Analytics Dashboard** — Track your productivity score, completion rate, and daily streaks  
-⚡ **Task Management** — Create, complete, and prioritize tasks with 5-level priority system  
-🎯 **Focus Mode** — Get AI-suggested focus task based on priority and urgency  
-🔐 **User Authentication** — JWT-based auth with secure session management  
+- **AI Goal Breakdown** — Describe any goal (e.g., "Crack Amazon in 3 months") and FlowMind generates an 8-12 task action plan using Groq's LLM
+- **Analytics Dashboard** — Track productivity score, task completion rate, daily streaks, and priority-based performance metrics
+- **Task Management** — Create, update, and complete tasks with 5-level priority system (Low, Medium, High, Urgent, Critical)
+- **Intelligent Focus** — AI-recommended focus task based on priority, urgency, and task status
+- **Secure Authentication** — JWT-based user authentication with refresh token support
+- **Progress Tracking** — Real-time goal progress visualization and historical completion analytics
+- **RESTful API** — Complete API documentation with Swagger UI for easy integration
 
 ## Tech Stack
 
-**Frontend:** React + JavaScript (dark theme UI)  
-**Backend:** Django REST Framework + PostgreSQL  
-**AI:** Groq API (llama-3.1-8b-instant)  
-**Deployment:** Render (both frontend and backend)  
+| Component | Technology | Version |
+|-----------|-----------|---------|
+| **Frontend** | React | 19.x |
+| **Frontend Styling** | CSS-in-JS (Inline) | Native |
+| **Backend Framework** | Django REST Framework | 3.17 |
+| **Backend Language** | Python | 3.11+ |
+| **Database** | PostgreSQL | 13+ |
+| **ORM** | Django ORM | Built-in |
+| **Authentication** | JWT (djangorestframework-simplejwt) | 5.5 |
+| **API Documentation** | drf-spectacular (OpenAPI/Swagger) | 0.28 |
+| **AI Integration** | Groq API (llama-3.1-8b-instant) | Latest |
+| **CORS** | django-cors-headers | 4.9 |
+| **Static Files** | WhiteNoise | 6.9 |
+| **Production Server** | Gunicorn | 26.0 |
+| **Deployment** | Render | Cloud |
+| **Environment Management** | python-dotenv | 1.2 |
+
+## Architecture
+
+```
+┌─────────────┐                           ┌──────────────────┐
+│   Browser   │                           │   Render Cloud   │
+└──────┬──────┘                           └──────────────────┘
+       │                                           │
+       │ HTTP/HTTPS                                │
+       │                                           │
+    ┌──▼──────────────────────────────────────────▼───┐
+    │        Render: flowmind-frontend               │
+    │  ┌──────────────────────────────────────────┐  │
+    │  │   React 19 (Dark Theme UI)               │  │
+    │  │  - Auth Screen                            │  │
+    │  │  - Chat Interface (AI Agent)             │  │
+    │  │  - Task Management Panel                 │  │
+    │  │  - Analytics Dashboard                   │  │
+    │  └──────────────────────────────────────────┘  │
+    │              (Node.js Runtime)                 │
+    └──────────────┬─────────────────────────────────┘
+                   │
+                   │ API Calls (JSON)
+                   │
+    ┌──────────────▼─────────────────────────────────┐
+    │     Render: flowmind-backend                  │
+    │  ┌──────────────────────────────────────────┐  │
+    │  │  Django REST API                         │  │
+    │  │  - Authentication (JWT)                  │  │
+    │  │  - Task/Goal Management                  │  │
+    │  │  - AI Chat Handler                       │  │
+    │  │  - Analytics Computation                 │  │
+    │  └──────────────────────────────────────────┘  │
+    │       (Python 3.11 + Gunicorn)                │
+    │                                                 │
+    │  ┌──────────────────────────────────────────┐  │
+    │  │  Groq API Client                         │  │
+    │  │  (llama-3.1-8b-instant)                  │  │
+    │  └───────────────┬──────────────────────────┘  │
+    └──────────────────┼───────────────────────────┘
+                       │
+                       │ LLM Requests
+                       │
+                    ┌──▼──┐
+                    │Groq │
+                    │ API │
+                    └─────┘
+                       │
+    ┌──────────────────▼─────────────────────────────┐
+    │     Render: PostgreSQL Database               │
+    │  - Users                                       │
+    │  - Goals                                       │
+    │  - Tasks                                       │
+    │  - Task History & Analytics                    │
+    └──────────────────────────────────────────────┘
+```
 
 ## Project Structure
 
 ```
 flowmind/
-├── frontend/              # React app
+├── frontend/                          # React frontend application
+│   ├── public/
 │   ├── src/
-│   │   └── App.js        # Main React component
-│   └── package.json
-├── flowmind_backend/      # Django backend
-│   ├── tasks/            # Models, views, serializers
-│   ├── flowmind_backend/ # Settings, URLs, WSGI
-│   └── manage.py
-├── render.yaml           # Render deployment config
-└── README.md
+│   │   ├── App.js                    # Main React component
+│   │   ├── index.js
+│   │   └── setupTests.js
+│   ├── package.json
+│   ├── package-lock.json
+│   └── README.md
+│
+├── flowmind_backend/                 # Django backend application
+│   ├── flowmind_backend/             # Project settings
+│   │   ├── settings.py               # Django configuration
+│   │   ├── urls.py                   # URL routing
+│   │   ├── wsgi.py                   # WSGI application
+│   │   └── asgi.py                   # ASGI configuration
+│   │
+│   ├── tasks/                        # Main app
+│   │   ├── models.py                 # Task, Goal, User models
+│   │   ├── views.py                  # API views & AI handlers
+│   │   ├── serializers.py            # DRF serializers
+│   │   ├── urls.py                   # App URL routing
+│   │   ├── scoring.py                # Focus task scoring algorithm
+│   │   ├── migrations/               # Database migrations
+│   │   └── admin.py
+│   │
+│   ├── manage.py                     # Django management script
+│   ├── requirements.txt              # Python dependencies
+│   └── db.sqlite3                    # Local SQLite (dev only)
+│
+├── render.yaml                       # Render deployment configuration
+├── .gitignore
+├── README.md                         # This file
+└── LICENSE
 ```
 
-## Setup
+## Installation
 
-### Local Development
+### Prerequisites
 
-**Backend:**
+- **Node.js** 18+ with npm
+- **Python** 3.11+
+- **PostgreSQL** 13+ (or use Render's managed database)
+- **Groq API Key** from [console.groq.com](https://console.groq.com)
+
+### Clone the Repository
+
 ```bash
+git clone https://github.com/apekshita0511/flowmind.git
+cd flowmind
+```
+
+## Environment Variables
+
+### Backend Environment Variables
+
+| Variable | Type | Description | Example |
+|----------|------|-------------|---------|
+| `SECRET_KEY` | String | Django secret key for session encryption | `django-insecure-...` |
+| `GROQ_API_KEY` | String | API key from Groq for LLM access | `gsk_...` |
+| `DATABASE_URL` | String | PostgreSQL connection string | `postgresql://user:pass@host/dbname` |
+| `DEBUG` | Boolean | Django debug mode (False in production) | `False` |
+| `ALLOWED_HOSTS` | String | Comma-separated list of allowed hosts | `flowmind-backend.onrender.com,localhost` |
+| `PYTHON_VERSION` | String | Python runtime version | `3.11` |
+
+### Frontend Environment Variables
+
+| Variable | Type | Description | Example |
+|----------|------|-------------|---------|
+| `REACT_APP_API_URL` | String | Backend base URL | `https://flowmind-backend.onrender.com` |
+| `REACT_APP_API_BASE_URL` | String | API endpoint base | `https://flowmind-backend.onrender.com/api/v1` |
+| `NODE_ENV` | String | Node environment | `production` |
+
+## Running Locally
+
+### Backend Setup
+
+```bash
+# Navigate to backend directory
 cd flowmind_backend
+
+# Create virtual environment
 python -m venv venv
-source venv/bin/activate  # or venv\Scripts\activate on Windows
+
+# Activate virtual environment
+# On macOS/Linux:
+source venv/bin/activate
+# On Windows:
+venv\Scripts\activate
+
+# Install dependencies
 pip install -r requirements.txt
+
+# Apply database migrations
 python manage.py migrate
+
+# Create superuser (optional)
+python manage.py createsuperuser
+
+# Run development server
 python manage.py runserver
+# Server runs on http://localhost:8000
 ```
 
-**Frontend:**
+### Frontend Setup
+
 ```bash
+# Navigate to frontend directory
 cd frontend
+
+# Install dependencies
 npm install
-npm start  # localhost:3000
+
+# Start development server
+npm start
+# Server runs on http://localhost:3000
+# API calls will be proxied to http://localhost:8000
 ```
 
-### Environment Variables
+### Environment Setup for Local Development
 
-**Backend:**
-- `SECRET_KEY` — Django secret key
-- `GROQ_API_KEY` — Groq API key from https://console.groq.com
-- `DATABASE_URL` — PostgreSQL (auto-set by Render)
+Create a `.env` file in `flowmind_backend/`:
 
-**Frontend:**
-- `REACT_APP_API_URL` — https://flowmind-backend.onrender.com
-- `REACT_APP_API_BASE_URL` — https://flowmind-backend.onrender.com/api/v1
+```
+SECRET_KEY=your-django-secret-key-here
+GROQ_API_KEY=your-groq-api-key-here
+DEBUG=True
+ALLOWED_HOSTS=localhost,127.0.0.1
+```
 
-## API Endpoints
+Then in the frontend directory, create a `.env` file:
 
-### Auth
-- `POST /api/v1/auth/register/` — Create account
-- `POST /api/v1/auth/login/` — Get JWT token
+```
+REACT_APP_API_URL=http://localhost:8000
+REACT_APP_API_BASE_URL=http://localhost:8000/api/v1
+```
 
-### Core
-- `POST /api/v1/chat/` — Chat with AI agent
-- `GET /api/v1/goals/` — List goals
-- `GET /api/v1/tasks/` — List tasks
-- `GET /api/v1/focus/` — Recommended focus task
-- `GET /api/v1/analytics/` — Productivity stats
+## API Overview
 
-## How to Use
+### Base URL
+- **Development:** `http://localhost:8000/api/v1`
+- **Production:** `https://flowmind-backend.onrender.com/api/v1`
 
-1. Sign up
-2. Tell FlowMind a goal like "Crack Amazon in 3 months"
-3. AI creates action plan with tasks
-4. Track progress, mark tasks as done
-5. Watch analytics update in real-time
+### Authentication Endpoints
 
-## Deployment
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/auth/register/` | Create new user account |
+| POST | `/auth/login/` | Obtain JWT access and refresh tokens |
+| POST | `/auth/refresh/` | Refresh expired access token |
 
-Deployed on **Render** with auto-redeploy on git push:
-- Backend: Python/Gunicorn
-- Frontend: Node.js
-- Database: PostgreSQL
+### Core API Endpoints
 
-## Known Issues
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---|
+| POST | `/chat/` | Send message to AI agent (goal breakdown, task creation) | Yes |
+| GET | `/goals/` | Retrieve all user goals with progress | Yes |
+| GET | `/tasks/` | Retrieve all user tasks | Yes |
+| PATCH | `/tasks/{id}/` | Update task status (mark as done) | Yes |
+| GET | `/focus/` | Get AI-recommended focus task | Yes |
+| GET | `/analytics/` | Get productivity analytics and stats | Yes |
 
-- Free tier Groq API rate limits — using 8B model to stay within TPM
-- System prompt limited to 10 tasks to avoid request overflow
+### Documentation
+
+Interactive API documentation available at:
+- **Swagger UI:** `http://localhost:8000/api/v1/docs/`
+- **ReDoc:** `http://localhost:8000/api/v1/schema/`
+
+### Example: Chat with AI
+
+**Request:**
+```bash
+POST /api/v1/chat/
+Content-Type: application/json
+Authorization: Bearer YOUR_JWT_TOKEN
+
+{
+  "message": "Crack Amazon in 3 months",
+  "history": []
+}
+```
+
+**Response:**
+```json
+{
+  "message": "Here's your plan to crack Amazon in 3 months!",
+  "tasks_created": [
+    {
+      "id": 1,
+      "title": "Master Data Structures and Algorithms",
+      "priority": 3,
+      "status": "pending"
+    }
+  ],
+  "goal": "Crack Amazon in 3 months"
+}
+```
+
+## Screenshots
+
+### Dashboard & Analytics
+![Dashboard](https://via.placeholder.com/800x400?text=FlowMind+Dashboard)
+*Real-time productivity metrics and goal progress tracking*
+
+### AI Chat Interface
+![Chat](https://via.placeholder.com/800x400?text=AI+Chat+Interface)
+*Natural language goal decomposition powered by Groq*
+
+### Task Management
+![Tasks](https://via.placeholder.com/800x400?text=Task+Management)
+*Priority-based task tracking with completion status*
+
+*Note: Replace placeholder images with actual project screenshots*
+
+## Future Improvements
+
+- [ ] Collaborative Goals — Share goals and tasks with team members
+- [ ] Calendar Integration — Sync tasks with Google Calendar and Outlook
+- [ ] Mobile App — React Native app for iOS and Android
+- [ ] Advanced Analytics — Heatmaps, trend analysis, and predictive insights
+- [ ] Integrations — Slack notifications, GitHub issue sync, Notion integration
+- [ ] AI Model Selection — Support for multiple LLM providers (OpenAI, Anthropic)
+- [ ] Offline Mode — Progressive Web App (PWA) for offline task management
+- [ ] Custom Prompts — User-defined AI instructions for personalized goal breakdown
+
+## Contributing
+
+Contributions are welcome! Please follow these guidelines:
+
+1. **Fork** the repository
+2. **Create a feature branch** (`git checkout -b feature/amazing-feature`)
+3. **Make your changes** with clear, atomic commits
+4. **Submit a Pull Request** with a detailed description
+
+### Code Style
+
+- **Backend:** Follow PEP 8 standards
+- **Frontend:** Use consistent JavaScript/React patterns
+- **Commits:** Use descriptive commit messages
+
+### Reporting Issues
+
+Please use GitHub Issues to report bugs or suggest features.
+
+## License
+
+This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.
+
+## Author
+
+**Apekshita** — Full-stack developer passionate about AI-driven productivity tools.
+
+- GitHub: [@apekshita0511](https://github.com/apekshita0511)
+- Email: [apekshita20@gmail.com](mailto:apekshita20@gmail.com)
 
 ---
 
-Built with ⚡ and AI.
+<div align="center">
+
+**Built with ❤️ and AI**
+
+[Report Bug](https://github.com/apekshita0511/flowmind/issues) • [Request Feature](https://github.com/apekshita0511/flowmind/issues)
+
+</div>
