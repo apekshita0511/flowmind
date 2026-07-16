@@ -207,9 +207,12 @@ function App() {
         fetch(`${API}/api/v1/goals/`, { headers: authHeaders() }),
         fetch(`${API}/api/v1/focus/`, { headers: authHeaders() }),
       ]);
-      setTasks(await tRes.json());
-      setGoals(await gRes.json());
-      setFocusTask(await fRes.json());
+      const tData = await tRes.json();
+      const gData = await gRes.json();
+      const fData = await fRes.json();
+      setTasks(Array.isArray(tData) ? tData : []);
+      setGoals(Array.isArray(gData) ? gData : []);
+      setFocusTask(fData && typeof fData === "object" ? fData : null);
     } catch {}
   }, [token, authHeaders]);
 
@@ -238,8 +241,15 @@ function App() {
         headers: authHeaders(),
         body: JSON.stringify({ message: userMsg, history: messages }),
       });
+      if (!res.ok) {
+        const errorData = await res.json();
+        const errorMsg = errorData.detail || errorData.message || "Backend error";
+        setMessages((prev) => [...prev, { role: "assistant", text: `Error: ${errorMsg}` }]);
+        setLoading(false);
+        return;
+      }
       const data = await res.json();
-      setMessages((prev) => [...prev, { role: "assistant", text: data.message }]);
+      setMessages((prev) => [...prev, { role: "assistant", text: data.message || "Got it!" }]);
 
       if (data.task_created) {
         await refreshData();
@@ -254,8 +264,8 @@ function App() {
       if (data.task_updated) {
         setTasks((prev) => prev.map((t) => (t.id === data.task_updated.id ? data.task_updated : t)));
       }
-    } catch {
-      setMessages((prev) => [...prev, { role: "assistant", text: "Something went wrong. Try again!" }]);
+    } catch (e) {
+      setMessages((prev) => [...prev, { role: "assistant", text: `Connection error: ${e.message}` }]);
     }
     setLoading(false);
   };
