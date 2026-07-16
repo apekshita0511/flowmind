@@ -321,18 +321,18 @@ Authorization: Bearer YOUR_JWT_TOKEN
 ## Screenshots
 
 ### Dashboard & Analytics
-![Dashboard](https://via.placeholder.com/800x400?text=FlowMind+Dashboard)
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/827021d3-f10f-475e-83ef-1087c4adfa71" />
+
 *Real-time productivity metrics and goal progress tracking*
 
 ### AI Chat Interface
-![Chat](https://via.placeholder.com/800x400?text=AI+Chat+Interface)
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/44eae13b-c23d-4c3f-b3af-89558f326b2b" />
 *Natural language goal decomposition powered by Groq*
 
 ### Task Management
-![Tasks](https://via.placeholder.com/800x400?text=Task+Management)
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/568362e6-ce1e-40c2-bca5-450e8fd2c45d" />
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/b009b4e0-ab71-45e3-a416-895f1382a8cf" />
 *Priority-based task tracking with completion status*
-
-*Note: Replace placeholder images with actual project screenshots*
 
 ## Future Improvements
 
