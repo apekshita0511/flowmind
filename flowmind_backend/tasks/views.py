@@ -160,8 +160,6 @@ RULES:
 
         action = ai_response.get("action")
         print(f"[ai_chat] Action: {action}", file=sys.stderr)
-    except Exception as e:
-        return Response({"message": f"Error: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         if action == "create_task":
             goal, _ = Goal.objects.get_or_create(
@@ -176,31 +174,52 @@ RULES:
             return Response({"message": ai_response["message"], "task_created": TaskSerializer(task).data})
 
         elif action == "breakdown_goal":
+            print(f"[breakdown_goal] Starting", file=sys.stderr)
             goal_title = ai_response.get("goal", "").strip()
+            print(f"[breakdown_goal] Goal title: {goal_title}", file=sys.stderr)
+
             existing_goal = Goal.objects.filter(
                 title__iexact=goal_title, status="active", user=user
             ).first()
+            print(f"[breakdown_goal] Checked for existing goal: {existing_goal}", file=sys.stderr)
 
             if existing_goal:
                 total = existing_goal.tasks.count()
                 done = existing_goal.tasks.filter(status="done").count()
+                print(f"[breakdown_goal] Goal exists, returning existing goal response", file=sys.stderr)
                 return Response({
                     "message": f"You already have this goal. Progress: {done}/{total} tasks completed.",
                     "goal_exists": True,
                     "goal": existing_goal.title
                 })
 
+            print(f"[breakdown_goal] Creating new goal: {goal_title}", file=sys.stderr)
             goal = Goal.objects.create(title=goal_title, user=user)
-            created_tasks = []
-            for t in ai_response.get("tasks", []):
-                task = Task.objects.create(
-                    goal=goal,
-                    title=t["title"],
-                    priority=t.get("priority", 2),
-                    source="agent"
-                )
-                created_tasks.append(TaskSerializer(task).data)
+            print(f"[breakdown_goal] Goal created with id: {goal.id}", file=sys.stderr)
 
+            created_tasks = []
+            tasks_list = ai_response.get("tasks", [])
+            print(f"[breakdown_goal] Processing {len(tasks_list)} tasks", file=sys.stderr)
+
+            for idx, t in enumerate(tasks_list):
+                try:
+                    print(f"[breakdown_goal] Task {idx}: {t}", file=sys.stderr)
+                    task = Task.objects.create(
+                        goal=goal,
+                        title=t["title"],
+                        priority=t.get("priority", 2),
+                        source="agent"
+                    )
+                    print(f"[breakdown_goal] Task {idx} created with id: {task.id}", file=sys.stderr)
+
+                    serialized = TaskSerializer(task).data
+                    print(f"[breakdown_goal] Task {idx} serialized", file=sys.stderr)
+                    created_tasks.append(serialized)
+                except Exception as task_err:
+                    print(f"[breakdown_goal] ERROR processing task {idx}: {traceback.format_exc()}", file=sys.stderr)
+                    raise
+
+            print(f"[breakdown_goal] All {len(created_tasks)} tasks created, returning response", file=sys.stderr)
             return Response({
                 "message": ai_response["message"],
                 "tasks_created": created_tasks,
